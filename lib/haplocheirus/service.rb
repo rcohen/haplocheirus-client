@@ -1,4 +1,5 @@
 class Haplocheirus::Service < ThriftClient
+  DEFAULTS = { :transport_wrapper => Thrift::BufferedTransport }
 
   def initialize(servers = nil, options = {})
     if servers.nil? || servers.empty?
@@ -7,7 +8,7 @@ class Haplocheirus::Service < ThriftClient
       server = Array(servers)
     end
 
-    super Haplocheirus::TimelineStore::Client, servers, options
+    super(Haplocheirus::TimelineStore::Client, servers, DEFAULTS.merge(options))
   end
 
 end
