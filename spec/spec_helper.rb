@@ -5,6 +5,7 @@ rescue LoadError
   retry
 end
 
+require 'set'
 require 'haplocheirus'
 
 class Haplocheirus::MockService #:nodoc:
@@ -16,7 +17,7 @@ class Haplocheirus::MockService #:nodoc:
   def append(e, is)
     is.each do |i|
       next unless @timelines.key?(i)
-      @timelines[i].push(e)
+      @timelines[i].add(e)
     end
   end
 
@@ -29,12 +30,12 @@ class Haplocheirus::MockService #:nodoc:
 
   def get(i, o, l)
     raise Thrift::ApplicationException unless @timelines.key?(i)
-    @timelines[i][o..(o+l)]
+    @timelines[i].to_a[o..(o+l)]
   end
 
   def get_range(i, f = nil, t = nil)
     raise Thrift::ApplicationException unless @timelines.key?(i)
-    return @timelines[i] unless f || t
+    return @timelines[i].to_a unless f || t
 
     r = []
     @timelines[i].each do |i|
@@ -51,12 +52,13 @@ class Haplocheirus::MockService #:nodoc:
   end
 
   def store(i, e)
-    @timelines[i] = e
+    @timelines[i] ||= SortedSet.new
+    e.each { |n| append n, [i] }
   end
 
   def merge(i, e)
     return unless @timelines.key?(i)
-    @timelines[i].concat(e).sort!.uniq!
+    @timelines[i].merge(e)
   end
 
   def unmerge(i, e)

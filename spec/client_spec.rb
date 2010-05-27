@@ -39,7 +39,7 @@ describe Haplocheirus::Client do
 
   describe 'get_range' do
     it 'works' do
-      @client.store '0', (1..20).to_a
+      @client.store '0', (1..20).to_a.reverse
 
       @client.get_range('0').should == (1..20).to_a
       @client.get_range('0', 5).should == (6..20).to_a
@@ -70,7 +70,7 @@ describe Haplocheirus::Client do
     it 'works' do
       @client.store '0', ['foo', 'bar', 'baz']
       @client.unmerge('0', ['bar'])
-      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['foo', 'baz']
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['baz', 'foo']
     end
   end
 
