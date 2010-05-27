@@ -44,7 +44,7 @@ class Haplocheirus::MockService #:nodoc:
       elsif f
         r << i if i > f
       elsif t
-        r << i if i < t
+        r << i if i <= t
       end
     end
 
