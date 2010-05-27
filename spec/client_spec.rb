@@ -5,8 +5,7 @@ describe Haplocheirus::Client do
   ARBITRARILY_LARGE_LIMIT = 100
 
   before(:each) do
-    @service = Haplocheirus::MockService.new
-    @client  = Haplocheirus::Client.new @service
+    @client  = Haplocheirus::Client.new(Haplocheirus::MockService.new)
   end
 
   describe 'append' do
