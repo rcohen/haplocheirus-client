@@ -18,6 +18,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'thrift', '>= 0.2.0'
   s.add_runtime_dependency 'thrift_client', '>= 0.4.1'
 
+  s.add_development_dependency 'rspec'
+
   s.files        = Dir.glob("{bin,lib}/**/*") + %w(LICENSE README.md)
   s.require_path = 'lib'
 end
