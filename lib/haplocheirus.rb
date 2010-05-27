@@ -1,5 +1,10 @@
-require 'thrift'
-require 'thrift_client'
+begin
+  require 'thrift'
+  require 'thrift_client'
+rescue LoadError
+  require 'rubygems'
+  retry
+end
 
 require 'haplocheirus/thrift/timeline_store'
 require 'haplocheirus/service'
