@@ -1,7 +1,8 @@
 Haplocheirus Client
+-------------------
 
 Haplocheirus is a highly available, partitioned storage service for
-vectors of heterogenous blobs.
+vectors of heterogenous blobs. This is a Ruby client library for that service.
 
 
 INSTALLATION
