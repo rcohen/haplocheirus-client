@@ -15,9 +15,7 @@ USAGE
 
 Attach a new client to a Haplo service:
 
-    >> include Haplocheirus
-    >> haplo  = Service.new # Defaults to localhost:7666
-    >> client = Client.new haplo
+    >> client = Haplocheirus.new # Defaults to localhost:7666
 
 Store a vector under the id of '0':
 
