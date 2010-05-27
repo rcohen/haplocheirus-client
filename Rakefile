@@ -14,6 +14,7 @@ task :default => :spec
 
 desc 'Run all specs in spec/'
 Spec::Rake::SpecTask.new(:spec) do |t|
+  t.ruby_opts += ['-Ilib', '-Ispec']
   t.spec_files = FileList['spec/**/*_spec.rb']
 end
 
