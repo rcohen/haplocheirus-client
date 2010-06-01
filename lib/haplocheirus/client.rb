@@ -60,7 +60,8 @@ class Haplocheirus::Client
     []
   end
 
-  # Atomically stores a set of entries into a timeline given by timeline_id.
+  # Atomically stores a set of entries into a timeline given by
+  # timeline_id. The entries are stored in the order provided.
   #
   # ==== Parameters
   # timeline_id<String>
