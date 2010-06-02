@@ -11,6 +11,7 @@ require 'haplocheirus/service'
 require 'haplocheirus/client'
 
 module Haplocheirus
+  autoload :MockService, 'haplocheirus/mock_service'
 
   # Convenience method for:
   #
