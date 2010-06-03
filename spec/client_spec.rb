@@ -32,22 +32,23 @@ describe Haplocheirus::Client do
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == (1..20).to_a
     end
 
+    it 'dedupes'
+
     it 'returns an empty collection on error' do
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should be_empty
     end
   end
 
-  describe 'get_range' do
+  describe 'since' do
     it 'works' do
       @client.store '0', (1..20).to_a.reverse
-
-      @client.get_range('0').should == (1..20).to_a
-      @client.get_range('0', 5).should == (6..20).to_a
-      @client.get_range('0', 5, 15).should == (6..15).to_a
+      @client.since('0', 5).should == 20.downto(6).to_a
     end
 
+    it 'dedupes'
+
     it 'returns an empty collection on error' do
-      @client.get_range('0').should be_empty
+      @client.since('0', 5).should be_empty
     end
   end
 
@@ -62,7 +63,7 @@ describe Haplocheirus::Client do
     it 'works' do
       @client.store '0', ['foo', 'baz']
       @client.merge '0', ['bar']
-      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['bar', 'baz', 'foo']
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['foo', 'bar', 'baz']
     end
   end
 
@@ -70,7 +71,7 @@ describe Haplocheirus::Client do
     it 'works' do
       @client.store '0', ['foo', 'bar', 'baz']
       @client.unmerge('0', ['bar'])
-      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['baz', 'foo']
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['foo', 'baz']
     end
   end
 

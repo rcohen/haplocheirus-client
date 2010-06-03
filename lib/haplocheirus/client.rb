@@ -37,25 +37,25 @@ class Haplocheirus::Client
   # timeline_id<String>
   # offset<Integer>
   # length<Integer>
+  # dedupe<Boolean>:: Optional. Defaults to false.
   #
-  def get(timeline_id, offset, length)
-    @service.get timeline_id, offset, length
+  def get(timeline_id, offset, length, dedupe = false)
+    @service.get timeline_id, offset, length, dedupe
   rescue Thrift::ApplicationException
     []
   end
 
   # Gets a range of entries from the timeline given by timeline_id
-  # between from_id (exclusive) and to_id (inclusive). This may
-  # include entries with a lower or higher id that were inserted out
-  # of order. Both from_id and to_id are treated as prefixes.
+  # since from_id (exclusive). This may include entries that were inserted out
+  # of order. from_id is treated as a prefix.
   #
   # ==== Parameters
   # timeline_id<String>
-  # from_id<Integer>:: Optional
-  # to_id<Integer>:: Optional
+  # from_id<Integer>
+  # dedupe<Integer>:: Optional. Defaults to false.
   #
-  def get_range(timeline_id, from_id = nil, to_id = nil)
-    @service.get_range timeline_id, from_id, to_id
+  def since(timeline_id, from_id, dedupe = false)
+    @service.get_since timeline_id, from_id, dedupe
   rescue Thrift::ApplicationException => e
     []
   end

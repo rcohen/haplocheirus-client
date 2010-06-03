@@ -9,7 +9,7 @@ class Haplocheirus::MockService #:nodoc:
   def append(e, is)
     is.each do |i|
       next unless @timelines.key?(i)
-      @timelines[i].add(e)
+      @timelines[i] << e
     end
   end
 
@@ -20,37 +20,30 @@ class Haplocheirus::MockService #:nodoc:
     end
   end
 
-  def get(i, o, l)
+  def get(i, o, l, d = false)
     raise Thrift::ApplicationException unless @timelines.key?(i)
     @timelines[i].to_a[o..(o+l)]
   end
 
-  def get_range(i, f = nil, t = nil)
+  def get_since(i, f, d = false)
     raise Thrift::ApplicationException unless @timelines.key?(i)
-    return @timelines[i].to_a unless f || t
-
-    r = []
-    @timelines[i].each do |i|
-      if f && t
-        r << i if i > f && i <= t
-      elsif f
-        r << i if i > f
-      elsif t
-        r << i if i <= t
-      end
-    end
-
-    r
+    index = @timelines[i].index(f)
+    index ? @timelines[i][0..index-1] : @timelines[i]
   end
 
   def store(i, e)
-    @timelines[i] ||= SortedSet.new
+    @timelines[i] ||= []
     e.each { |n| append n, [i] }
   end
 
   def merge(i, e)
     return unless @timelines.key?(i)
-    @timelines[i].merge(e)
+
+    e.each do |el|
+      o = 0
+      o += 1 while @timelines[i][0] <= el
+      @timelines[i].insert(o + 1, el)
+    end
   end
 
   def unmerge(i, e)
