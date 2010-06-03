@@ -39,13 +39,13 @@ module Haplocheirus
         return
       end
 
-      def get(timeline_id, offset, length)
-        send_get(timeline_id, offset, length)
+      def get(timeline_id, offset, length, dedupe)
+        send_get(timeline_id, offset, length, dedupe)
         return recv_get()
       end
 
-      def send_get(timeline_id, offset, length)
-        send_message('get', Get_args, :timeline_id => timeline_id, :offset => offset, :length => length)
+      def send_get(timeline_id, offset, length, dedupe)
+        send_message('get', Get_args, :timeline_id => timeline_id, :offset => offset, :length => length, :dedupe => dedupe)
       end
 
       def recv_get()
@@ -54,19 +54,19 @@ module Haplocheirus
         raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get failed: unknown result')
       end
 
-      def get_range(timeline_id, from_id, to_id)
-        send_get_range(timeline_id, from_id, to_id)
-        return recv_get_range()
+      def get_since(timeline_id, from_id, dedupe)
+        send_get_since(timeline_id, from_id, dedupe)
+        return recv_get_since()
       end
 
-      def send_get_range(timeline_id, from_id, to_id)
-        send_message('get_range', Get_range_args, :timeline_id => timeline_id, :from_id => from_id, :to_id => to_id)
+      def send_get_since(timeline_id, from_id, dedupe)
+        send_message('get_since', Get_since_args, :timeline_id => timeline_id, :from_id => from_id, :dedupe => dedupe)
       end
 
-      def recv_get_range()
-        result = receive_message(Get_range_result)
+      def recv_get_since()
+        result = receive_message(Get_since_result)
         return result.success unless result.success.nil?
-        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_range failed: unknown result')
+        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_since failed: unknown result')
       end
 
       def store(timeline_id, entries)
@@ -147,15 +147,15 @@ module Haplocheirus
       def process_get(seqid, iprot, oprot)
         args = read_args(iprot, Get_args)
         result = Get_result.new()
-        result.success = @handler.get(args.timeline_id, args.offset, args.length)
+        result.success = @handler.get(args.timeline_id, args.offset, args.length, args.dedupe)
         write_result(result, oprot, 'get', seqid)
       end
 
-      def process_get_range(seqid, iprot, oprot)
-        args = read_args(iprot, Get_range_args)
-        result = Get_range_result.new()
-        result.success = @handler.get_range(args.timeline_id, args.from_id, args.to_id)
-        write_result(result, oprot, 'get_range', seqid)
+      def process_get_since(seqid, iprot, oprot)
+        args = read_args(iprot, Get_since_args)
+        result = Get_since_result.new()
+        result.success = @handler.get_since(args.timeline_id, args.from_id, args.dedupe)
+        write_result(result, oprot, 'get_since', seqid)
       end
 
       def process_store(seqid, iprot, oprot)
@@ -259,12 +259,14 @@ module Haplocheirus
       TIMELINE_ID = 1
       OFFSET = 2
       LENGTH = 3
+      DEDUPE = 4
 
-      ::Thrift::Struct.field_accessor self, :timeline_id, :offset, :length
+      ::Thrift::Struct.field_accessor self, :timeline_id, :offset, :length, :dedupe
       FIELDS = {
         TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
         OFFSET => {:type => ::Thrift::Types::I32, :name => 'offset'},
-        LENGTH => {:type => ::Thrift::Types::I32, :name => 'length'}
+        LENGTH => {:type => ::Thrift::Types::I32, :name => 'length'},
+        DEDUPE => {:type => ::Thrift::Types::BOOL, :name => 'dedupe'}
       }
 
       def struct_fields; FIELDS; end
@@ -290,17 +292,17 @@ module Haplocheirus
 
     end
 
-    class Get_range_args
+    class Get_since_args
       include ::Thrift::Struct
       TIMELINE_ID = 1
       FROM_ID = 2
-      TO_ID = 3
+      DEDUPE = 3
 
-      ::Thrift::Struct.field_accessor self, :timeline_id, :from_id, :to_id
+      ::Thrift::Struct.field_accessor self, :timeline_id, :from_id, :dedupe
       FIELDS = {
         TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
         FROM_ID => {:type => ::Thrift::Types::I64, :name => 'from_id'},
-        TO_ID => {:type => ::Thrift::Types::I64, :name => 'to_id'}
+        DEDUPE => {:type => ::Thrift::Types::BOOL, :name => 'dedupe'}
       }
 
       def struct_fields; FIELDS; end
@@ -310,7 +312,7 @@ module Haplocheirus
 
     end
 
-    class Get_range_result
+    class Get_since_result
       include ::Thrift::Struct
       SUCCESS = 0
 
@@ -451,6 +453,6 @@ module Haplocheirus
       end
 
     end
+
   end
 end
-
