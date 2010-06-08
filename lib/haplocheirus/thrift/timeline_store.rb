@@ -39,6 +39,21 @@ module Haplocheirus
         return
       end
 
+      def filter(timeline_id, entry)
+        send_filter(timeline_id, entry)
+        return recv_filter()
+      end
+
+      def send_filter(timeline_id, entry)
+        send_message('filter', Filter_args, :timeline_id => timeline_id, :entry => entry)
+      end
+
+      def recv_filter()
+        result = receive_message(Filter_result)
+        return result.success unless result.success.nil?
+        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'filter failed: unknown result')
+      end
+
       def get(timeline_id, offset, length, dedupe)
         send_get(timeline_id, offset, length, dedupe)
         return recv_get()
@@ -144,6 +159,13 @@ module Haplocheirus
         write_result(result, oprot, 'remove', seqid)
       end
 
+      def process_filter(seqid, iprot, oprot)
+        args = read_args(iprot, Filter_args)
+        result = Filter_result.new()
+        result.success = @handler.filter(args.timeline_id, args.entry)
+        write_result(result, oprot, 'filter', seqid)
+      end
+
       def process_get(seqid, iprot, oprot)
         args = read_args(iprot, Get_args)
         result = Get_result.new()
@@ -245,6 +267,40 @@ module Haplocheirus
 
       FIELDS = {
 
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+    end
+
+    class Filter_args
+      include ::Thrift::Struct
+      TIMELINE_ID = 1
+      ENTRY = 2
+
+      ::Thrift::Struct.field_accessor self, :timeline_id, :entry
+      FIELDS = {
+        TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
+        ENTRY => {:type => ::Thrift::Types::LIST, :name => 'entry', :element => {:type => ::Thrift::Types::STRING}}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+    end
+
+    class Filter_result
+      include ::Thrift::Struct
+      SUCCESS = 0
+
+      ::Thrift::Struct.field_accessor self, :success
+      FIELDS = {
+        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}}
       }
 
       def struct_fields; FIELDS; end
