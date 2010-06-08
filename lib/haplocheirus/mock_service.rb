@@ -36,6 +36,11 @@ class Haplocheirus::MockService #:nodoc:
     e.each { |n| append n, [i] }
   end
 
+  def filter(i, *e)
+    raise Thrift::ApplicationException unless @timelines.key?(i)
+    @timelines[i] & e.flatten
+  end
+
   def merge(i, e)
     return unless @timelines.key?(i)
 

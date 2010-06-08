@@ -59,6 +59,18 @@ describe Haplocheirus::Client do
     end
   end
 
+  describe 'filter' do
+    it 'works' do
+      @client.store '0', ['foo', 'bar']
+      @client.filter('0', 'foo').should == ['foo']
+      @client.filter('0', ['foo']).should == ['foo']
+    end
+
+    it 'returns an empty collection on error' do
+      @client.filter('0', 'foo').should == []
+    end
+  end
+
   describe 'merge' do
     it 'works' do
       @client.store '0', ['foo', 'baz']

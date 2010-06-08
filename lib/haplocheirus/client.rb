@@ -71,6 +71,20 @@ class Haplocheirus::Client
     @service.store timeline_id, entries
   end
 
+  # Returns the intersection of entries with the current contents of
+  # the timeline given by timeline_id. Returns an empty array if the
+  # timeline_id does not exist.
+  #
+  # ==== Parameters
+  # timeline_id<String>
+  # entries<Array>
+  #
+  def filter(timeline_id, *entries)
+    @service.filter timeline_id, entries.flatten
+  rescue Thrift::ApplicationException
+    []
+  end
+
   # Merges the entries into the timeline given by timeline_id. Merges
   # will do nothing if the timeline hasn't been created using #store.
   #
