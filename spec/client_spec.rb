@@ -15,6 +15,13 @@ describe Haplocheirus::Client do
 
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['foo']
     end
+
+    it 'supports single timeline ids' do
+      @client.store '0', []
+      @client.append 'foo', '0'
+
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == ['foo']
+    end
   end
 
   describe 'remove' do

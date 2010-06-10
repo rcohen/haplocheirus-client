@@ -13,10 +13,10 @@ class Haplocheirus::Client
   #
   # ==== Parameters
   # entry
-  # timeline_ids<Array[String]>
+  # timeline_ids<Array[String], String>
   #
-  def append(entry, timeline_ids)
-    @service.append entry, timeline_ids
+  def append(entry, *timeline_ids)
+    @service.append entry, timeline_ids.flatten
   end
 
   # Removes an entry from a set of timlines given by timeline_ids
