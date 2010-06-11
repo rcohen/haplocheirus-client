@@ -41,7 +41,7 @@ class Haplocheirus::Client
   #
   def get(timeline_id, offset, length, dedupe = false)
     @service.get timeline_id, offset, length, dedupe
-  rescue Thrift::ApplicationException
+  rescue Haplocheirus::TimelineStoreException
     []
   end
 
@@ -56,7 +56,7 @@ class Haplocheirus::Client
   #
   def since(timeline_id, from_id, dedupe = false)
     @service.get_since timeline_id, from_id, dedupe
-  rescue Thrift::ApplicationException => e
+  rescue Haplocheirus::TimelineStoreException
     []
   end
 
@@ -81,7 +81,7 @@ class Haplocheirus::Client
   #
   def filter(timeline_id, *entries)
     @service.filter timeline_id, entries.flatten
-  rescue Thrift::ApplicationException
+  rescue Haplocheirus::TimelineStoreException
     []
   end
 

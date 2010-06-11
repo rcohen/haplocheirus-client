@@ -21,12 +21,12 @@ class Haplocheirus::MockService #:nodoc:
   end
 
   def get(i, o, l, d = false)
-    raise Thrift::ApplicationException unless @timelines.key?(i)
+    raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
     @timelines[i].to_a[o..(o+l)]
   end
 
   def get_since(i, f, d = false)
-    raise Thrift::ApplicationException unless @timelines.key?(i)
+    raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
     index = @timelines[i].index(f)
     index ? @timelines[i][0..index-1] : @timelines[i]
   end
@@ -37,7 +37,7 @@ class Haplocheirus::MockService #:nodoc:
   end
 
   def filter(i, *e)
-    raise Thrift::ApplicationException unless @timelines.key?(i)
+    raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
     @timelines[i] & e.flatten
   end
 
