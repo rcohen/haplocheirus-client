@@ -5,6 +5,7 @@
 #
 
 require 'thrift'
+require 'haplocheirus/thrift/timeline_store_types'
 
 module Haplocheirus
   module TimelineStore
@@ -22,6 +23,7 @@ module Haplocheirus
 
       def recv_append()
         result = receive_message(Append_result)
+        raise result.ex unless result.ex.nil?
         return
       end
 
@@ -36,6 +38,7 @@ module Haplocheirus
 
       def recv_remove()
         result = receive_message(Remove_result)
+        raise result.ex unless result.ex.nil?
         return
       end
 
@@ -51,6 +54,7 @@ module Haplocheirus
       def recv_filter()
         result = receive_message(Filter_result)
         return result.success unless result.success.nil?
+        raise result.ex unless result.ex.nil?
         raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'filter failed: unknown result')
       end
 
@@ -66,22 +70,24 @@ module Haplocheirus
       def recv_get()
         result = receive_message(Get_result)
         return result.success unless result.success.nil?
+        raise result.ex unless result.ex.nil?
         raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get failed: unknown result')
       end
 
-      def get_since(timeline_id, from_id, dedupe)
-        send_get_since(timeline_id, from_id, dedupe)
-        return recv_get_since()
+      def get_range(timeline_id, from_id, to_id, dedupe)
+        send_get_range(timeline_id, from_id, to_id, dedupe)
+        return recv_get_range()
       end
 
-      def send_get_since(timeline_id, from_id, dedupe)
-        send_message('get_since', Get_since_args, :timeline_id => timeline_id, :from_id => from_id, :dedupe => dedupe)
+      def send_get_range(timeline_id, from_id, to_id, dedupe)
+        send_message('get_range', Get_range_args, :timeline_id => timeline_id, :from_id => from_id, :to_id => to_id, :dedupe => dedupe)
       end
 
-      def recv_get_since()
-        result = receive_message(Get_since_result)
+      def recv_get_range()
+        result = receive_message(Get_range_result)
         return result.success unless result.success.nil?
-        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_since failed: unknown result')
+        raise result.ex unless result.ex.nil?
+        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'get_range failed: unknown result')
       end
 
       def store(timeline_id, entries)
@@ -95,6 +101,7 @@ module Haplocheirus
 
       def recv_store()
         result = receive_message(Store_result)
+        raise result.ex unless result.ex.nil?
         return
       end
 
@@ -109,6 +116,7 @@ module Haplocheirus
 
       def recv_merge()
         result = receive_message(Merge_result)
+        raise result.ex unless result.ex.nil?
         return
       end
 
@@ -123,6 +131,7 @@ module Haplocheirus
 
       def recv_unmerge()
         result = receive_message(Unmerge_result)
+        raise result.ex unless result.ex.nil?
         return
       end
 
@@ -137,6 +146,7 @@ module Haplocheirus
 
       def recv_delete_timeline()
         result = receive_message(Delete_timeline_result)
+        raise result.ex unless result.ex.nil?
         return
       end
 
@@ -148,63 +158,99 @@ module Haplocheirus
       def process_append(seqid, iprot, oprot)
         args = read_args(iprot, Append_args)
         result = Append_result.new()
-        @handler.append(args.entry, args.timeline_ids)
+        begin
+          @handler.append(args.entry, args.timeline_ids)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'append', seqid)
       end
 
       def process_remove(seqid, iprot, oprot)
         args = read_args(iprot, Remove_args)
         result = Remove_result.new()
-        @handler.remove(args.entry, args.timeline_ids)
+        begin
+          @handler.remove(args.entry, args.timeline_ids)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'remove', seqid)
       end
 
       def process_filter(seqid, iprot, oprot)
         args = read_args(iprot, Filter_args)
         result = Filter_result.new()
-        result.success = @handler.filter(args.timeline_id, args.entry)
+        begin
+          result.success = @handler.filter(args.timeline_id, args.entry)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'filter', seqid)
       end
 
       def process_get(seqid, iprot, oprot)
         args = read_args(iprot, Get_args)
         result = Get_result.new()
-        result.success = @handler.get(args.timeline_id, args.offset, args.length, args.dedupe)
+        begin
+          result.success = @handler.get(args.timeline_id, args.offset, args.length, args.dedupe)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'get', seqid)
       end
 
-      def process_get_since(seqid, iprot, oprot)
-        args = read_args(iprot, Get_since_args)
-        result = Get_since_result.new()
-        result.success = @handler.get_since(args.timeline_id, args.from_id, args.dedupe)
-        write_result(result, oprot, 'get_since', seqid)
+      def process_get_range(seqid, iprot, oprot)
+        args = read_args(iprot, Get_range_args)
+        result = Get_range_result.new()
+        begin
+          result.success = @handler.get_range(args.timeline_id, args.from_id, args.to_id, args.dedupe)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
+        write_result(result, oprot, 'get_range', seqid)
       end
 
       def process_store(seqid, iprot, oprot)
         args = read_args(iprot, Store_args)
         result = Store_result.new()
-        @handler.store(args.timeline_id, args.entries)
+        begin
+          @handler.store(args.timeline_id, args.entries)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'store', seqid)
       end
 
       def process_merge(seqid, iprot, oprot)
         args = read_args(iprot, Merge_args)
         result = Merge_result.new()
-        @handler.merge(args.timeline_id, args.entries)
+        begin
+          @handler.merge(args.timeline_id, args.entries)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'merge', seqid)
       end
 
       def process_unmerge(seqid, iprot, oprot)
         args = read_args(iprot, Unmerge_args)
         result = Unmerge_result.new()
-        @handler.unmerge(args.timeline_id, args.entries)
+        begin
+          @handler.unmerge(args.timeline_id, args.entries)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'unmerge', seqid)
       end
 
       def process_delete_timeline(seqid, iprot, oprot)
         args = read_args(iprot, Delete_timeline_args)
         result = Delete_timeline_result.new()
-        @handler.delete_timeline(args.timeline_id)
+        begin
+          @handler.delete_timeline(args.timeline_id)
+        rescue TimelineStoreException => ex
+          result.ex = ex
+        end
         write_result(result, oprot, 'delete_timeline', seqid)
       end
 
@@ -232,9 +278,11 @@ module Haplocheirus
 
     class Append_result
       include ::Thrift::Struct
+      EX = 1
 
+      ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -264,9 +312,11 @@ module Haplocheirus
 
     class Remove_result
       include ::Thrift::Struct
+      EX = 1
 
+      ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -297,10 +347,12 @@ module Haplocheirus
     class Filter_result
       include ::Thrift::Struct
       SUCCESS = 0
+      EX = 1
 
-      ::Thrift::Struct.field_accessor self, :success
+      ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
-        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}}
+        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}},
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -335,10 +387,12 @@ module Haplocheirus
     class Get_result
       include ::Thrift::Struct
       SUCCESS = 0
+      EX = 1
 
-      ::Thrift::Struct.field_accessor self, :success
+      ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
-        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}}
+        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}},
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -348,16 +402,18 @@ module Haplocheirus
 
     end
 
-    class Get_since_args
+    class Get_range_args
       include ::Thrift::Struct
       TIMELINE_ID = 1
       FROM_ID = 2
-      DEDUPE = 3
+      TO_ID = 3
+      DEDUPE = 4
 
-      ::Thrift::Struct.field_accessor self, :timeline_id, :from_id, :dedupe
+      ::Thrift::Struct.field_accessor self, :timeline_id, :from_id, :to_id, :dedupe
       FIELDS = {
         TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
         FROM_ID => {:type => ::Thrift::Types::I64, :name => 'from_id'},
+        TO_ID => {:type => ::Thrift::Types::I64, :name => 'to_id'},
         DEDUPE => {:type => ::Thrift::Types::BOOL, :name => 'dedupe'}
       }
 
@@ -368,13 +424,15 @@ module Haplocheirus
 
     end
 
-    class Get_since_result
+    class Get_range_result
       include ::Thrift::Struct
       SUCCESS = 0
+      EX = 1
 
-      ::Thrift::Struct.field_accessor self, :success
+      ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
-        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}}
+        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}},
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -404,9 +462,11 @@ module Haplocheirus
 
     class Store_result
       include ::Thrift::Struct
+      EX = 1
 
+      ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -436,9 +496,11 @@ module Haplocheirus
 
     class Merge_result
       include ::Thrift::Struct
+      EX = 1
 
+      ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -468,9 +530,11 @@ module Haplocheirus
 
     class Unmerge_result
       include ::Thrift::Struct
+      EX = 1
 
+      ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -498,9 +562,11 @@ module Haplocheirus
 
     class Delete_timeline_result
       include ::Thrift::Struct
+      EX = 1
 
+      ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
