@@ -47,15 +47,17 @@ class Haplocheirus::Client
 
   # Gets a range of entries from the timeline given by timeline_id
   # since from_id (exclusive). This may include entries that were inserted out
-  # of order. from_id is treated as a prefix.
+  # of order. from_id and to_id are treated as a 8 byte prefixes. If
+  # to_id is <= 0, results are not bounded by a maximum value.
   #
   # ==== Parameters
   # timeline_id<String>
   # from_id<Integer>
+  # to_id<Integer>:: Optional. Defaults to 0.
   # dedupe<Integer>:: Optional. Defaults to false.
   #
-  def since(timeline_id, from_id, dedupe = false)
-    @service.get_since timeline_id, from_id, dedupe
+  def range(timeline_id, from_id, to_id = 0, dedupe = false)
+    @service.get_range timeline_id, from_id, to_id, dedupe
   rescue Haplocheirus::TimelineStoreException
     []
   end

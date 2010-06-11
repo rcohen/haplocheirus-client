@@ -46,16 +46,21 @@ describe Haplocheirus::Client do
     end
   end
 
-  describe 'since' do
-    it 'works' do
+  describe 'range' do
+    it 'returns with a lower bound' do
       @client.store '0', (1..20).to_a.reverse
-      @client.since('0', 5).should == 20.downto(6).to_a
+      @client.range('0', 5).should == 20.downto(6).to_a
+    end
+
+    it 'returns with an upper bound' do
+      @client.store '0', (1..20).to_a.reverse
+      @client.range('0', 5, 10).should == 10.downto(6).to_a
     end
 
     it 'dedupes'
 
     it 'returns an empty collection on error' do
-      @client.since('0', 5).should be_empty
+      @client.range('0', 5).should be_empty
     end
   end
 

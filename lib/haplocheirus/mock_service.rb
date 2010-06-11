@@ -25,10 +25,11 @@ class Haplocheirus::MockService #:nodoc:
     @timelines[i].to_a[o..(o+l)]
   end
 
-  def get_since(i, f, d = false)
+  def get_range(i, f, t = 0, d = false)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
-    index = @timelines[i].index(f)
-    index ? @timelines[i][0..index-1] : @timelines[i]
+    min = @timelines[i].index(f)
+    max = t > 0 ? @timelines[i].index(t) : 0
+    min ? @timelines[i][max..min-1] : @timelines[i]
   end
 
   def store(i, e)
