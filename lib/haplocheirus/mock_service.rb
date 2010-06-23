@@ -57,7 +57,7 @@ class Haplocheirus::MockService #:nodoc:
     @timelines[i].reject! { |i| e.include?(i) }
   end
 
-  def delete(i)
+  def delete_timeline(i)
     @timelines.delete(i)
   end
 end

@@ -115,6 +115,6 @@ class Haplocheirus::Client
   # timeline_id<String>
   #
   def delete(timeline_id)
-    @service.delete timeline_id
+    @service.delete_timeline timeline_id
   end
 end
