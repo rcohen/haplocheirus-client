@@ -27,4 +27,22 @@ module Haplocheirus
     end
 
   end
+
+  class TimelineSegment
+    include ::Thrift::Struct
+    ENTRIES = 1
+    SIZE = 2
+
+    ::Thrift::Struct.field_accessor self, :entries, :size
+    FIELDS = {
+      ENTRIES => {:type => ::Thrift::Types::LIST, :name => 'entries', :element => {:type => ::Thrift::Types::STRING}},
+      SIZE => {:type => ::Thrift::Types::I32, :name => 'size'}
+    }
+
+    def struct_fields; FIELDS; end
+
+    def validate
+    end
+
+  end
 end

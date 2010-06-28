@@ -391,7 +391,7 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
-        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}},
+        SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => TimelineSegment},
         EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 
@@ -431,7 +431,7 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
-        SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}},
+        SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => TimelineSegment},
         EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
       }
 

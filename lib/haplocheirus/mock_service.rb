@@ -2,6 +2,9 @@ require 'set'
 
 class Haplocheirus::MockService #:nodoc:
 
+  class MockResult < Struct.new(:entries, :size)
+  end
+
   def initialize
     @timelines = {}
   end
@@ -22,14 +25,16 @@ class Haplocheirus::MockService #:nodoc:
 
   def get(i, o, l, d = false)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
-    @timelines[i].to_a[o..(o+l)]
+    t = @timelines[i].to_a[o..(o+l)]
+    MockResult.new t, t.length
   end
 
   def get_range(i, f, t = 0, d = false)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
     min = @timelines[i].index(f)
     max = t > 0 ? @timelines[i].index(t) : 0
-    min ? @timelines[i][max..min-1] : @timelines[i]
+    t = min ? @timelines[i][max..min-1] : @timelines[i]
+    MockResult.new t, t.length
   end
 
   def store(i, e)
