@@ -39,6 +39,12 @@ class Haplocheirus::Client
   # length<Integer>
   # dedupe<Boolean>:: Optional. Defaults to false.
   #
+  # ==== Returns
+  # TimelineSegment
+  #
+  # NOTE: The #size of the returned segment is computed *before* dupes
+  # are removed.
+  #
   def get(timeline_id, offset, length, dedupe = false)
     @service.get timeline_id, offset, length, dedupe
   rescue Haplocheirus::TimelineStoreException
@@ -55,6 +61,12 @@ class Haplocheirus::Client
   # from_id<Integer>
   # to_id<Integer>:: Optional. Defaults to 0.
   # dedupe<Integer>:: Optional. Defaults to false.
+  #
+  # ==== Returns
+  # TimelineSegment
+  #
+  # NOTE: The #size of the returned segment is computed *before* dupes
+  # are removed.
   #
   def range(timeline_id, from_id, to_id = 0, dedupe = false)
     @service.get_range timeline_id, from_id, to_id, dedupe
