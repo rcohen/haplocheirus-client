@@ -49,10 +49,9 @@ describe Haplocheirus::Client do
 
     it 'dedupes'
 
-    it 'returns an empty collection on error' do
+    it 'returns nil on error' do
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should be_empty
-      rval.length.should == 0
+      rval.should be_nil
     end
   end
 
@@ -73,10 +72,9 @@ describe Haplocheirus::Client do
 
     it 'dedupes'
 
-    it 'returns an empty collection on error' do
+    it 'returns nil on error' do
       rval = @client.range('0', 5)
-      rval.entries.should be_empty
-      rval.size.should == 0
+      rval.should be_nil
     end
   end
 
@@ -97,7 +95,7 @@ describe Haplocheirus::Client do
     end
 
     it 'returns an empty collection on error' do
-      @client.filter('0', 'foo').should == []
+      @client.filter('0', 'foo').should be_nil
     end
   end
 
@@ -127,7 +125,7 @@ describe Haplocheirus::Client do
     it 'works' do
       @client.store '0', ['foo']
       @client.delete '0'
-      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should == []
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
     end
   end
 

@@ -31,7 +31,8 @@ class Haplocheirus::Client
 
   # Gets entries on the timeline given by timeline_id, optionally
   # beginning at offset and limited by length. Timelines are stored in
-  # recency order - an offset of 0 is the latest entry.
+  # recency order - an offset of 0 is the latest entry. Returns nil if
+  # the timeline_id does not exist.
   #
   # ==== Parameters
   # timeline_id<String>
@@ -48,13 +49,14 @@ class Haplocheirus::Client
   def get(timeline_id, offset, length, dedupe = false)
     @service.get timeline_id, offset, length, dedupe
   rescue Haplocheirus::TimelineStoreException
-    []
+    nil
   end
 
   # Gets a range of entries from the timeline given by timeline_id
   # since from_id (exclusive). This may include entries that were inserted out
   # of order. from_id and to_id are treated as a 8 byte prefixes. If
-  # to_id is <= 0, results are not bounded by a maximum value.
+  # to_id is <= 0, results are not bounded by a maximum value. Returns
+  # nil if the timeline_id does not exist.
   #
   # ==== Parameters
   # timeline_id<String>
@@ -71,7 +73,7 @@ class Haplocheirus::Client
   def range(timeline_id, from_id, to_id = 0, dedupe = false)
     @service.get_range timeline_id, from_id, to_id, dedupe
   rescue Haplocheirus::TimelineStoreException
-    []
+    nil
   end
 
   # Atomically stores a set of entries into a timeline given by
@@ -86,7 +88,7 @@ class Haplocheirus::Client
   end
 
   # Returns the intersection of entries with the current contents of
-  # the timeline given by timeline_id. Returns an empty array if the
+  # the timeline given by timeline_id. Returns nil if the
   # timeline_id does not exist.
   #
   # ==== Parameters
@@ -96,7 +98,7 @@ class Haplocheirus::Client
   def filter(timeline_id, *entries)
     @service.filter timeline_id, entries.flatten
   rescue Haplocheirus::TimelineStoreException
-    []
+    nil
   end
 
   # Merges the entries into the timeline given by timeline_id. Merges
