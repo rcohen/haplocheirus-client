@@ -12,7 +12,7 @@ class Haplocheirus::MockService #:nodoc:
   def append(e, is)
     is.each do |i|
       next unless @timelines.key?(i)
-      @timelines[i] << e
+      @timelines[i].unshift(e)
     end
   end
 
@@ -39,7 +39,7 @@ class Haplocheirus::MockService #:nodoc:
 
   def store(i, e)
     @timelines[i] ||= []
-    e.each { |n| append n, [i] }
+    e.reverse.each { |n| append n, [i] }
   end
 
   def filter(i, *e)
