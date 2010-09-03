@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.summary     = "Haplocheirus Ruby client library"
   s.description = "A Ruby client library for the Haplocheirus store."
 
-  s.required_rubygems_version = ">= 1.3.6"
+  s.required_rubygems_version = ">= 1.3.5"
 
   s.add_runtime_dependency 'thrift', '>= 0.2.0'
   s.add_runtime_dependency 'thrift_client', '>= 0.4.1'
