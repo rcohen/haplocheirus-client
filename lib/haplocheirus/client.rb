@@ -14,7 +14,7 @@ class Haplocheirus::Client
   # ==== Parameters
   # entry
   # prefix<String>:: Prefix to prepend to each id
-  # timeline_ids<Array[String], String>
+  # timeline_ids<Array[Integer], Integer>
   #
   def append(entry, prefix, *timeline_ids)
     @service.append entry, prefix, timeline_ids.flatten
@@ -25,7 +25,7 @@ class Haplocheirus::Client
   # ==== Paramaters
   # entry
   # prefix<String>:: Prefix to prepend to each id
-  # timeline_ids<Array[String]>
+  # timeline_ids<Array[Integer]>
   #
   def remove(entry, prefix, timeline_ids)
     @service.remove entry, prefix, timeline_ids
