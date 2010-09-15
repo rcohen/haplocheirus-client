@@ -111,6 +111,28 @@ describe Haplocheirus::Client do
     end
   end
 
+  describe 'merge_indirect' do
+    it 'works' do
+      @client.store '0', ['foo', 'baz']
+      @client.store '1', ['bar']
+      @client.merge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo', 'bar', 'baz']
+      rval.size.should == 3
+    end
+
+    it 'no-ops for non-existing source' do
+      @client.store '0', ['foo']
+      @client.get('1', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
+      @client.merge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo']
+      rval.size.should == 1
+    end
+  end
+
   describe 'unmerge' do
     it 'works' do
       @client.store '0', ['foo', 'bar', 'baz']
@@ -119,6 +141,28 @@ describe Haplocheirus::Client do
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
       rval.entries.should == ['foo', 'baz']
       rval.size.should == 2
+    end
+  end
+
+  describe 'unmerge_indirect' do
+    it 'works' do
+      @client.store '0', ['foo', 'bar', 'baz']
+      @client.store '1', ['bar']
+      @client.unmerge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo', 'baz']
+      rval.size.should == 2
+    end
+
+    it 'no-ops for non-existing source' do
+      @client.store '0', ['foo']
+      @client.get('1', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
+      @client.unmerge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo']
+      rval.size.should == 1
     end
   end
 

@@ -114,6 +114,17 @@ class Haplocheirus::Client
     @service.merge timeline_id, entries
   end
 
+  # Merges entries in the timeline given by source_id into the
+  # timeline given by dest_id. Does nothing if source_id does not exist.
+  #
+  # ==== Parameters
+  # dest_id<String>
+  # source_id<String>
+  #
+  def merge_indirect(dest_id, source_id)
+    @service.merge_indirect dest_id, source_id
+  end
+
   # Remove a list of entries from a timeline. Unmerges will do nothing
   # if the timeline hasn't been created using #store.
   #
@@ -123,6 +134,17 @@ class Haplocheirus::Client
   #
   def unmerge(timeline_id, entries)
     @service.unmerge timeline_id, entries
+  end
+
+  # Removes entries in the timeline given by source_id from the
+  # timeline given by dest_id. Does nothing if source_id does not exist.
+  #
+  # ==== Parameters
+  # dest_id<String>
+  # source_id<String>
+  #
+  def unmerge_indirect(dest_id, source_id)
+    @service.unmerge_indirect dest_id, source_id
   end
 
   # Removes the timeline from the backend store
