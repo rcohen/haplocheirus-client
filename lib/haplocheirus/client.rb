@@ -13,20 +13,22 @@ class Haplocheirus::Client
   #
   # ==== Parameters
   # entry
+  # prefix<String>:: Prefix to prepend to each id
   # timeline_ids<Array[String], String>
   #
-  def append(entry, *timeline_ids)
-    @service.append entry, timeline_ids.flatten
+  def append(entry, prefix, *timeline_ids)
+    @service.append entry, prefix, timeline_ids.flatten
   end
 
   # Removes an entry from a set of timlines given by timeline_ids
   #
   # ==== Paramaters
   # entry
+  # prefix<String>:: Prefix to prepend to each id
   # timeline_ids<Array[String]>
   #
-  def remove(entry, timeline_ids)
-    @service.remove entry, timeline_ids
+  def remove(entry, prefix, timeline_ids)
+    @service.remove entry, prefix, timeline_ids
   end
 
   # Gets entries on the timeline given by timeline_id, optionally

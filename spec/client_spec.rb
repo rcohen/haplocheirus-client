@@ -3,6 +3,7 @@ require 'spec_helper'
 describe Haplocheirus::Client do
 
   ARBITRARILY_LARGE_LIMIT = 100
+  PREFIX = 'timeline:'
 
   before(:each) do
     @client  = Haplocheirus::Client.new(Haplocheirus::MockService.new)
@@ -10,19 +11,19 @@ describe Haplocheirus::Client do
 
   describe 'append' do
     it 'works' do
-      @client.store '0', []
-      @client.append 'foo', ['0']
+      @client.store PREFIX + '0', []
+      @client.append 'foo', PREFIX, ['0']
 
-      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
       rval.entries.should == ['foo']
       rval.size.should == 1
     end
 
     it 'supports single timeline ids' do
-      @client.store '0', []
-      @client.append 'foo', '0'
+      @client.store PREFIX + '0', []
+      @client.append 'foo', PREFIX, '0'
 
-      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
       rval.entries.should == ['foo']
       rval.size.should == 1
     end
@@ -30,10 +31,10 @@ describe Haplocheirus::Client do
 
   describe 'remove' do
     it 'works' do
-      @client.store '0', ['foo']
-      @client.remove 'foo', ['0']
+      @client.store PREFIX + '0', ['foo']
+      @client.remove 'foo', PREFIX, ['0']
 
-      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
       rval.entries.should == []
       rval.size.should == 0
     end
