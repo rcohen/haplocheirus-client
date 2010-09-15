@@ -105,7 +105,8 @@ class Haplocheirus::Client
   end
 
   # Merges the entries into the timeline given by timeline_id. Merges
-  # will do nothing if the timeline hasn't been created using #store.
+  # will do nothing if the timeline hasn't been created using
+  # #store. Entries should be byte arrays of at least 8B per entry.
   #
   # ==== Parameters
   # timeline_id<String>
@@ -127,7 +128,8 @@ class Haplocheirus::Client
   end
 
   # Remove a list of entries from a timeline. Unmerges will do nothing
-  # if the timeline hasn't been created using #store.
+  # if the timeline hasn't been created using #store. Entries should
+  # be byte arrays of at least 8B per entry.
   #
   # ==== Parameters
   # timeline_id<String>
