@@ -12,13 +12,13 @@ module Haplocheirus
     class Client
       include ::Thrift::Client
 
-      def append(entry, timeline_ids)
-        send_append(entry, timeline_ids)
+      def append(entry, timeline_prefix, timeline_ids)
+        send_append(entry, timeline_prefix, timeline_ids)
         recv_append()
       end
 
-      def send_append(entry, timeline_ids)
-        send_message('append', Append_args, :entry => entry, :timeline_ids => timeline_ids)
+      def send_append(entry, timeline_prefix, timeline_ids)
+        send_message('append', Append_args, :entry => entry, :timeline_prefix => timeline_prefix, :timeline_ids => timeline_ids)
       end
 
       def recv_append()
@@ -27,13 +27,13 @@ module Haplocheirus
         return
       end
 
-      def remove(entry, timeline_ids)
-        send_remove(entry, timeline_ids)
+      def remove(entry, timeline_prefix, timeline_ids)
+        send_remove(entry, timeline_prefix, timeline_ids)
         recv_remove()
       end
 
-      def send_remove(entry, timeline_ids)
-        send_message('remove', Remove_args, :entry => entry, :timeline_ids => timeline_ids)
+      def send_remove(entry, timeline_prefix, timeline_ids)
+        send_message('remove', Remove_args, :entry => entry, :timeline_prefix => timeline_prefix, :timeline_ids => timeline_ids)
       end
 
       def recv_remove()
@@ -42,13 +42,13 @@ module Haplocheirus
         return
       end
 
-      def filter(timeline_id, entry)
-        send_filter(timeline_id, entry)
+      def filter(timeline_id, entry, max_search)
+        send_filter(timeline_id, entry, max_search)
         return recv_filter()
       end
 
-      def send_filter(timeline_id, entry)
-        send_message('filter', Filter_args, :timeline_id => timeline_id, :entry => entry)
+      def send_filter(timeline_id, entry, max_search)
+        send_message('filter', Filter_args, :timeline_id => timeline_id, :entry => entry, :max_search => max_search)
       end
 
       def recv_filter()
@@ -135,6 +135,36 @@ module Haplocheirus
         return
       end
 
+      def merge_indirect(dest_timeline_id, source_timeline_id)
+        send_merge_indirect(dest_timeline_id, source_timeline_id)
+        recv_merge_indirect()
+      end
+
+      def send_merge_indirect(dest_timeline_id, source_timeline_id)
+        send_message('merge_indirect', Merge_indirect_args, :dest_timeline_id => dest_timeline_id, :source_timeline_id => source_timeline_id)
+      end
+
+      def recv_merge_indirect()
+        result = receive_message(Merge_indirect_result)
+        raise result.ex unless result.ex.nil?
+        return
+      end
+
+      def unmerge_indirect(dest_timeline_id, source_timeline_id)
+        send_unmerge_indirect(dest_timeline_id, source_timeline_id)
+        recv_unmerge_indirect()
+      end
+
+      def send_unmerge_indirect(dest_timeline_id, source_timeline_id)
+        send_message('unmerge_indirect', Unmerge_indirect_args, :dest_timeline_id => dest_timeline_id, :source_timeline_id => source_timeline_id)
+      end
+
+      def recv_unmerge_indirect()
+        result = receive_message(Unmerge_indirect_result)
+        raise result.ex unless result.ex.nil?
+        return
+      end
+
       def delete_timeline(timeline_id)
         send_delete_timeline(timeline_id)
         recv_delete_timeline()
@@ -159,8 +189,8 @@ module Haplocheirus
         args = read_args(iprot, Append_args)
         result = Append_result.new()
         begin
-          @handler.append(args.entry, args.timeline_ids)
-        rescue TimelineStoreException => ex
+          @handler.append(args.entry, args.timeline_prefix, args.timeline_ids)
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'append', seqid)
@@ -170,8 +200,8 @@ module Haplocheirus
         args = read_args(iprot, Remove_args)
         result = Remove_result.new()
         begin
-          @handler.remove(args.entry, args.timeline_ids)
-        rescue TimelineStoreException => ex
+          @handler.remove(args.entry, args.timeline_prefix, args.timeline_ids)
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'remove', seqid)
@@ -181,8 +211,8 @@ module Haplocheirus
         args = read_args(iprot, Filter_args)
         result = Filter_result.new()
         begin
-          result.success = @handler.filter(args.timeline_id, args.entry)
-        rescue TimelineStoreException => ex
+          result.success = @handler.filter(args.timeline_id, args.entry, args.max_search)
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'filter', seqid)
@@ -193,7 +223,7 @@ module Haplocheirus
         result = Get_result.new()
         begin
           result.success = @handler.get(args.timeline_id, args.offset, args.length, args.dedupe)
-        rescue TimelineStoreException => ex
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'get', seqid)
@@ -204,7 +234,7 @@ module Haplocheirus
         result = Get_range_result.new()
         begin
           result.success = @handler.get_range(args.timeline_id, args.from_id, args.to_id, args.dedupe)
-        rescue TimelineStoreException => ex
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'get_range', seqid)
@@ -215,7 +245,7 @@ module Haplocheirus
         result = Store_result.new()
         begin
           @handler.store(args.timeline_id, args.entries)
-        rescue TimelineStoreException => ex
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'store', seqid)
@@ -226,7 +256,7 @@ module Haplocheirus
         result = Merge_result.new()
         begin
           @handler.merge(args.timeline_id, args.entries)
-        rescue TimelineStoreException => ex
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'merge', seqid)
@@ -237,10 +267,32 @@ module Haplocheirus
         result = Unmerge_result.new()
         begin
           @handler.unmerge(args.timeline_id, args.entries)
-        rescue TimelineStoreException => ex
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'unmerge', seqid)
+      end
+
+      def process_merge_indirect(seqid, iprot, oprot)
+        args = read_args(iprot, Merge_indirect_args)
+        result = Merge_indirect_result.new()
+        begin
+          @handler.merge_indirect(args.dest_timeline_id, args.source_timeline_id)
+        rescue Haplocheirus::TimelineStoreException => ex
+          result.ex = ex
+        end
+        write_result(result, oprot, 'merge_indirect', seqid)
+      end
+
+      def process_unmerge_indirect(seqid, iprot, oprot)
+        args = read_args(iprot, Unmerge_indirect_args)
+        result = Unmerge_indirect_result.new()
+        begin
+          @handler.unmerge_indirect(args.dest_timeline_id, args.source_timeline_id)
+        rescue Haplocheirus::TimelineStoreException => ex
+          result.ex = ex
+        end
+        write_result(result, oprot, 'unmerge_indirect', seqid)
       end
 
       def process_delete_timeline(seqid, iprot, oprot)
@@ -248,7 +300,7 @@ module Haplocheirus
         result = Delete_timeline_result.new()
         begin
           @handler.delete_timeline(args.timeline_id)
-        rescue TimelineStoreException => ex
+        rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
         write_result(result, oprot, 'delete_timeline', seqid)
@@ -261,12 +313,14 @@ module Haplocheirus
     class Append_args
       include ::Thrift::Struct
       ENTRY = 1
-      TIMELINE_IDS = 2
+      TIMELINE_PREFIX = 2
+      TIMELINE_IDS = 3
 
-      ::Thrift::Struct.field_accessor self, :entry, :timeline_ids
+      ::Thrift::Struct.field_accessor self, :entry, :timeline_prefix, :timeline_ids
       FIELDS = {
         ENTRY => {:type => ::Thrift::Types::STRING, :name => 'entry'},
-        TIMELINE_IDS => {:type => ::Thrift::Types::LIST, :name => 'timeline_ids', :element => {:type => ::Thrift::Types::STRING}}
+        TIMELINE_PREFIX => {:type => ::Thrift::Types::STRING, :name => 'timeline_prefix'},
+        TIMELINE_IDS => {:type => ::Thrift::Types::LIST, :name => 'timeline_ids', :element => {:type => ::Thrift::Types::I64}}
       }
 
       def struct_fields; FIELDS; end
@@ -282,7 +336,7 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -295,12 +349,14 @@ module Haplocheirus
     class Remove_args
       include ::Thrift::Struct
       ENTRY = 1
-      TIMELINE_IDS = 2
+      TIMELINE_PREFIX = 2
+      TIMELINE_IDS = 3
 
-      ::Thrift::Struct.field_accessor self, :entry, :timeline_ids
+      ::Thrift::Struct.field_accessor self, :entry, :timeline_prefix, :timeline_ids
       FIELDS = {
         ENTRY => {:type => ::Thrift::Types::STRING, :name => 'entry'},
-        TIMELINE_IDS => {:type => ::Thrift::Types::LIST, :name => 'timeline_ids', :element => {:type => ::Thrift::Types::STRING}}
+        TIMELINE_PREFIX => {:type => ::Thrift::Types::STRING, :name => 'timeline_prefix'},
+        TIMELINE_IDS => {:type => ::Thrift::Types::LIST, :name => 'timeline_ids', :element => {:type => ::Thrift::Types::I64}}
       }
 
       def struct_fields; FIELDS; end
@@ -316,7 +372,7 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -330,11 +386,13 @@ module Haplocheirus
       include ::Thrift::Struct
       TIMELINE_ID = 1
       ENTRY = 2
+      MAX_SEARCH = 3
 
-      ::Thrift::Struct.field_accessor self, :timeline_id, :entry
+      ::Thrift::Struct.field_accessor self, :timeline_id, :entry, :max_search
       FIELDS = {
         TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
-        ENTRY => {:type => ::Thrift::Types::LIST, :name => 'entry', :element => {:type => ::Thrift::Types::STRING}}
+        ENTRY => {:type => ::Thrift::Types::LIST, :name => 'entry', :element => {:type => ::Thrift::Types::STRING}},
+        MAX_SEARCH => {:type => ::Thrift::Types::I32, :name => 'max_search'}
       }
 
       def struct_fields; FIELDS; end
@@ -352,7 +410,7 @@ module Haplocheirus
       ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
         SUCCESS => {:type => ::Thrift::Types::LIST, :name => 'success', :element => {:type => ::Thrift::Types::STRING}},
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -391,8 +449,8 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
-        SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => TimelineSegment},
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => Haplocheirus::TimelineSegment},
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -431,8 +489,8 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
-        SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => TimelineSegment},
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        SUCCESS => {:type => ::Thrift::Types::STRUCT, :name => 'success', :class => Haplocheirus::TimelineSegment},
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -466,7 +524,7 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -500,7 +558,7 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -534,7 +592,75 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+    end
+
+    class Merge_indirect_args
+      include ::Thrift::Struct
+      DEST_TIMELINE_ID = 1
+      SOURCE_TIMELINE_ID = 2
+
+      ::Thrift::Struct.field_accessor self, :dest_timeline_id, :source_timeline_id
+      FIELDS = {
+        DEST_TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'dest_timeline_id'},
+        SOURCE_TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'source_timeline_id'}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+    end
+
+    class Merge_indirect_result
+      include ::Thrift::Struct
+      EX = 1
+
+      ::Thrift::Struct.field_accessor self, :ex
+      FIELDS = {
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+    end
+
+    class Unmerge_indirect_args
+      include ::Thrift::Struct
+      DEST_TIMELINE_ID = 1
+      SOURCE_TIMELINE_ID = 2
+
+      ::Thrift::Struct.field_accessor self, :dest_timeline_id, :source_timeline_id
+      FIELDS = {
+        DEST_TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'dest_timeline_id'},
+        SOURCE_TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'source_timeline_id'}
+      }
+
+      def struct_fields; FIELDS; end
+
+      def validate
+      end
+
+    end
+
+    class Unmerge_indirect_result
+      include ::Thrift::Struct
+      EX = 1
+
+      ::Thrift::Struct.field_accessor self, :ex
+      FIELDS = {
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -566,7 +692,7 @@ module Haplocheirus
 
       ::Thrift::Struct.field_accessor self, :ex
       FIELDS = {
-        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => TimelineStoreException}
+        EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
       def struct_fields; FIELDS; end
@@ -577,4 +703,5 @@ module Haplocheirus
     end
 
   end
+
 end

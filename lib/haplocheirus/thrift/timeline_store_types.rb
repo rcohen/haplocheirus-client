@@ -4,6 +4,7 @@
 # DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING
 #
 
+
 module Haplocheirus
   class TimelineStoreException < ::Thrift::Exception
     include ::Thrift::Struct
@@ -45,4 +46,5 @@ module Haplocheirus
     end
 
   end
+
 end
