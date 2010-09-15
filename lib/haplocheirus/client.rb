@@ -98,7 +98,8 @@ class Haplocheirus::Client
   # entries<Array>
   #
   def filter(timeline_id, *entries)
-    @service.filter timeline_id, entries.flatten
+    # FIXME: Expose max search depth
+    @service.filter timeline_id, entries.flatten, -1
   rescue Haplocheirus::TimelineStoreException
     nil
   end
