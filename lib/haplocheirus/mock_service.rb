@@ -9,17 +9,17 @@ class Haplocheirus::MockService #:nodoc:
     @timelines = {}
   end
 
-  def append(e, is)
+  def append(e, p, is)
     is.each do |i|
-      next unless @timelines.key?(i)
-      @timelines[i].unshift(e)
+      next unless @timelines.key?(p + i.to_s)
+      @timelines[p + i.to_s].unshift(e)
     end
   end
 
-  def remove(e, is)
+  def remove(e, p, is)
     is.each do |i|
-      next unless @timelines.key?(i)
-      @timelines[i].reject! { |i| i == e }
+      next unless @timelines.key?(p + i.to_s)
+      @timelines[p + i.to_s].reject! { |i| i == e }
     end
   end
 
@@ -39,7 +39,7 @@ class Haplocheirus::MockService #:nodoc:
 
   def store(i, e)
     @timelines[i] ||= []
-    e.reverse.each { |n| append n, [i] }
+    e.reverse.each { |n| append n, '', [i] }
   end
 
   def filter(i, *e)
@@ -57,9 +57,17 @@ class Haplocheirus::MockService #:nodoc:
     end
   end
 
+  def merge_indirect(d, s)
+    merge(d, @timelines[s]) if @timelines.key?(s)
+  end
+
   def unmerge(i, e)
     return unless @timelines.key?(i)
     @timelines[i].reject! { |i| e.include?(i) }
+  end
+
+  def unmerge_indirect(d, s)
+    unmerge(d, @timelines[s]) if @timelines.key?(s)
   end
 
   def delete_timeline(i)
