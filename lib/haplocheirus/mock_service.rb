@@ -18,8 +18,10 @@ class Haplocheirus::MockService #:nodoc:
 
   def remove(e, p, is)
     is.each do |i|
-      next unless @timelines.key?(p + i.to_s)
-      @timelines[p + i.to_s].reject! { |i| i == e }
+      key = p + i.to_s
+      next unless @timelines.key?(key)
+      @timelines[key].reject! { |i| i == e }
+      @timelines.delete(key) if @timelines[key].empty?
     end
   end
 
@@ -31,10 +33,10 @@ class Haplocheirus::MockService #:nodoc:
 
   def get_range(i, f, t = 0, d = false)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
-    min = @timelines[i].index(f)
-    max = t > 0 ? @timelines[i].index(t) : 0
+    min = @timelines[i].index([f].pack("Q"))
+    max = t > 0 ? @timelines[i].index([t].pack("Q")) : 0
     t = min ? @timelines[i][max..min-1] : @timelines[i]
-    MockResult.new t, t.length
+    MockResult.new t, @timelines[i].length
   end
 
   def store(i, e)
