@@ -1,5 +1,7 @@
 class Haplocheirus::Client
 
+  attr_accessor :service
+
   # ==== Parameters
   # service<ThriftClient>
   #

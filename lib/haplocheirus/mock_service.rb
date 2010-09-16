@@ -75,4 +75,9 @@ class Haplocheirus::MockService #:nodoc:
   def delete_timeline(i)
     @timelines.delete(i)
   end
+
+  # This is not part of Haplo, but is useful for test harnesses
+  def reset!
+    @timelines = {}
+  end
 end
