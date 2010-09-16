@@ -1,5 +1,7 @@
 class Haplocheirus::Client
 
+  attr_accessor :service
+
   # ==== Parameters
   # service<ThriftClient>
   #
@@ -13,20 +15,22 @@ class Haplocheirus::Client
   #
   # ==== Parameters
   # entry
-  # timeline_ids<Array[String], String>
+  # prefix<String>:: Prefix to prepend to each id
+  # timeline_ids<Array[Integer], Integer>
   #
-  def append(entry, *timeline_ids)
-    @service.append entry, timeline_ids.flatten
+  def append(entry, prefix, *timeline_ids)
+    @service.append entry, prefix, timeline_ids.flatten
   end
 
   # Removes an entry from a set of timlines given by timeline_ids
   #
   # ==== Paramaters
   # entry
-  # timeline_ids<Array[String]>
+  # prefix<String>:: Prefix to prepend to each id
+  # timeline_ids<Array[Integer]>
   #
-  def remove(entry, timeline_ids)
-    @service.remove entry, timeline_ids
+  def remove(entry, prefix, timeline_ids)
+    @service.remove entry, prefix, timeline_ids
   end
 
   # Gets entries on the timeline given by timeline_id, optionally
@@ -96,13 +100,15 @@ class Haplocheirus::Client
   # entries<Array>
   #
   def filter(timeline_id, *entries)
-    @service.filter timeline_id, entries.flatten
+    # FIXME: Expose max search depth
+    @service.filter timeline_id, entries.flatten, -1
   rescue Haplocheirus::TimelineStoreException
     nil
   end
 
   # Merges the entries into the timeline given by timeline_id. Merges
-  # will do nothing if the timeline hasn't been created using #store.
+  # will do nothing if the timeline hasn't been created using
+  # #store. Entries should be byte arrays of at least 8B per entry.
   #
   # ==== Parameters
   # timeline_id<String>
@@ -112,8 +118,20 @@ class Haplocheirus::Client
     @service.merge timeline_id, entries
   end
 
+  # Merges entries in the timeline given by source_id into the
+  # timeline given by dest_id. Does nothing if source_id does not exist.
+  #
+  # ==== Parameters
+  # dest_id<String>
+  # source_id<String>
+  #
+  def merge_indirect(dest_id, source_id)
+    @service.merge_indirect dest_id, source_id
+  end
+
   # Remove a list of entries from a timeline. Unmerges will do nothing
-  # if the timeline hasn't been created using #store.
+  # if the timeline hasn't been created using #store. Entries should
+  # be byte arrays of at least 8B per entry.
   #
   # ==== Parameters
   # timeline_id<String>
@@ -121,6 +139,17 @@ class Haplocheirus::Client
   #
   def unmerge(timeline_id, entries)
     @service.unmerge timeline_id, entries
+  end
+
+  # Removes entries in the timeline given by source_id from the
+  # timeline given by dest_id. Does nothing if source_id does not exist.
+  #
+  # ==== Parameters
+  # dest_id<String>
+  # source_id<String>
+  #
+  def unmerge_indirect(dest_id, source_id)
+    @service.unmerge_indirect dest_id, source_id
   end
 
   # Removes the timeline from the backend store

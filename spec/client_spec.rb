@@ -3,6 +3,7 @@ require 'spec_helper'
 describe Haplocheirus::Client do
 
   ARBITRARILY_LARGE_LIMIT = 100
+  PREFIX = 'timeline:'
 
   before(:each) do
     @client  = Haplocheirus::Client.new(Haplocheirus::MockService.new)
@@ -10,71 +11,68 @@ describe Haplocheirus::Client do
 
   describe 'append' do
     it 'works' do
-      @client.store '0', []
-      @client.append 'foo', ['0']
+      @client.store PREFIX + '0', ['bar']
+      @client.append 'foo', PREFIX, [0]
 
-      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ['foo']
-      rval.size.should == 1
+      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo', 'bar']
+      rval.size.should == 2
     end
 
     it 'supports single timeline ids' do
-      @client.store '0', []
-      @client.append 'foo', '0'
+      @client.store PREFIX + '0', ['bar']
+      @client.append 'foo', PREFIX, 0
 
-      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ['foo']
-      rval.size.should == 1
+      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo', 'bar']
+      rval.size.should == 2
     end
   end
 
   describe 'remove' do
     it 'works' do
-      @client.store '0', ['foo']
-      @client.remove 'foo', ['0']
-
-      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == []
-      rval.size.should == 0
+      @client.store PREFIX + '0', ['foo']
+      @client.remove 'foo', PREFIX, [0]
+      @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
     end
   end
 
   describe 'get' do
     it 'works' do
-      @client.store '0', (1..20).to_a
+      @client.store '0', (1..20).map { |i| i.to_s }
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == (1..20).to_a
+      rval.entries.should == (1..20).map { |i| i.to_s }
       rval.size.should == 20
     end
 
     it 'dedupes'
 
     it 'returns nil on error' do
-      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.should be_nil
+      @client.delete '0'
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).should be_nil
     end
   end
 
   describe 'range' do
     it 'returns with a lower bound' do
-      @client.store '0', (1..20).to_a.reverse
+      @client.store '0', (1..20).map { |i| [i].pack("Q") }.reverse
       rval = @client.range('0', 5)
-      rval.entries.should == 20.downto(6).to_a
-      rval.size.should == 15
+      rval.entries.should == 20.downto(6).map { |i| [i].pack("Q") }
+      rval.size.should == 20
     end
 
     it 'returns with an upper bound' do
-      @client.store '0', (1..20).to_a.reverse
+      @client.store '0', (1..20).map { |i| [i].pack("Q") }.reverse
       rval = @client.range('0', 5, 10)
-      rval.entries.should == 10.downto(6).to_a
-      rval.size.should == 5
+      rval.entries.should == 10.downto(6).map { |i| [i].pack("Q") }
+      rval.size.should == 20
     end
 
     it 'dedupes'
 
     it 'returns nil on error' do
-      rval = @client.range('0', 5)
-      rval.should be_nil
+      @client.delete '0'
+      @client.range('0', 5).should be_nil
     end
   end
 
@@ -89,24 +87,51 @@ describe Haplocheirus::Client do
 
   describe 'filter' do
     it 'works' do
-      @client.store '0', ['foo', 'bar']
-      @client.filter('0', 'foo').should == ['foo']
-      @client.filter('0', ['foo']).should == ['foo']
+      @client.store '0', ["\003\000\000\000\000\000\000\000", "\002\000\000\000\000\000\000\000"]
+      @client.filter('0', "\003\000\000\000\000\000\000\000").should == ["\003\000\000\000\000\000\000\000"]
+      @client.filter('0', ["\003\000\000\000\000\000\000\000"]).should == ["\003\000\000\000\000\000\000\000"]
     end
 
-    it 'returns an empty collection on error' do
-      @client.filter('0', 'foo').should be_nil
+    it 'returns nil on error' do
+      @client.delete '0'
+      @client.filter('0', "\003\000\000\000\000\000\000\000").should be_nil
     end
   end
 
   describe 'merge' do
     it 'works' do
-      @client.store '0', ['foo', 'baz']
-      @client.merge '0', ['bar']
+      @client.store '0', ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
+      @client.merge '0', ["\002\000\000\000\000\000\000\000"]
 
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ['foo', 'bar', 'baz']
+      rval.entries.should == ["\003\000\000\000\000\000\000\000",
+                              "\002\000\000\000\000\000\000\000",
+                              "\001\000\000\000\000\000\000\000"]
       rval.size.should == 3
+    end
+  end
+
+  describe 'merge_indirect' do
+    it 'works' do
+      @client.store '0', ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
+      @client.store '1', ["\002\000\000\000\000\000\000\000"]
+      @client.merge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ["\003\000\000\000\000\000\000\000",
+                              "\002\000\000\000\000\000\000\000",
+                              "\001\000\000\000\000\000\000\000"]
+      rval.size.should == 3
+    end
+
+    it 'no-ops for non-existing source' do
+      @client.store '0', ['foo']
+      @client.delete '1' # just in case
+      @client.merge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo']
+      rval.size.should == 1
     end
   end
 
@@ -118,6 +143,28 @@ describe Haplocheirus::Client do
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
       rval.entries.should == ['foo', 'baz']
       rval.size.should == 2
+    end
+  end
+
+  describe 'unmerge_indirect' do
+    it 'works' do
+      @client.store '0', ['foo', 'bar', 'baz']
+      @client.store '1', ['bar']
+      @client.unmerge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo', 'baz']
+      rval.size.should == 2
+    end
+
+    it 'no-ops for non-existing source' do
+      @client.store '0', ['foo']
+      @client.delete '1' # just in case
+      @client.unmerge_indirect '0', '1'
+
+      rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval.entries.should == ['foo']
+      rval.size.should == 1
     end
   end
 
