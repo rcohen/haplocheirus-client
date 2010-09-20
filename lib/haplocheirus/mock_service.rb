@@ -28,6 +28,7 @@ class Haplocheirus::MockService #:nodoc:
   def get(i, o, l, d = false)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
     t = @timelines[i].to_a[o..(o+l)]
+    t = dedupe(t) if d
     MockResult.new t, t.length
   end
 
@@ -36,6 +37,7 @@ class Haplocheirus::MockService #:nodoc:
     min = @timelines[i].index([f].pack("Q"))
     max = t > 0 ? @timelines[i].index([t].pack("Q")) : 0
     t = min ? @timelines[i][max..min-1] : @timelines[i]
+    t = dedupe(t) if d
     MockResult.new t, @timelines[i].length
   end
 
@@ -80,4 +82,23 @@ class Haplocheirus::MockService #:nodoc:
   def reset!
     @timelines = {}
   end
+
+  private
+
+  def dedupe(t)
+    # I can't wait until Array#uniq takes a block...
+    seen = { "" => [] }
+    t.reverse.each do |i|
+      key = i[8,16]
+      if key == ""
+        seen[""] << i
+      elsif seen.key?(key)
+        next
+      else
+        seen[key] = i
+      end
+    end
+    seen.values.flatten.sort { |a, b| b[0,8] <=> a[0,8] }
+  end
+
 end
