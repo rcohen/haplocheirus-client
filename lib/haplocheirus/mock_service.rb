@@ -11,8 +11,9 @@ class Haplocheirus::MockService #:nodoc:
 
   def append(e, p, is)
     is.each do |i|
-      next unless @timelines.key?(p + i.to_s)
-      @timelines[p + i.to_s].unshift(e)
+      key = p + i.to_s
+      next unless @timelines.key?(key)
+      @timelines[key].unshift(e) unless @timelines[key].include?(e)
     end
   end
 
@@ -87,18 +88,21 @@ class Haplocheirus::MockService #:nodoc:
 
   def dedupe(t)
     # I can't wait until Array#uniq takes a block...
-    seen = { "" => [] }
+    seen = { }
     t.reverse.each do |i|
-      key = i[8,16]
-      if key == ""
-        seen[""] << i
-      elsif seen.key?(key)
-        next
+      status_id, secondary_id, bitfield = i.unpack("QQI")
+
+      if bitfield & 4
+        next if seen.key?(status_id) || seen.key?(secondary_id)
+        seen[status_id] = i
+        seen[secondary_id] = i if secondary_id != ""
       else
-        seen[key] = i
+        next if seen.key?(status_id)
+        seen[status_id] = i
       end
     end
-    seen.values.flatten.sort { |a, b| b[0,8] <=> a[0,8] }
+
+    seen.values.uniq.sort { |a, b| b[0,8] <=> a[0,8] }
   end
 
 end
