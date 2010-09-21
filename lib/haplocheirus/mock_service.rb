@@ -92,7 +92,7 @@ class Haplocheirus::MockService #:nodoc:
     t.reverse.each do |i|
       status_id, secondary_id, bitfield = i.unpack("QQI")
 
-      if bitfield & 4
+      if bitfield[2] == 1
         next if seen.key?(status_id) || seen.key?(secondary_id)
         seen[status_id] = i
         seen[secondary_id] = i if secondary_id != ""
