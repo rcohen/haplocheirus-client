@@ -45,12 +45,21 @@ describe Haplocheirus::Client do
       rval.size.should == 20
     end
 
-    it 'dedupes' do
+    it 'dedupes with source present' do
       timeline = ["\004\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200", # retweet - dupe
                   "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000", # tweet
                   "\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"] # retweet - not a dupe
       @client.store '0', timeline
       @client.get('0', 0, ARBITRARILY_LARGE_LIMIT, true).entries.should == timeline[1,2]
+    end
+
+    it 'dedupes without source present' do
+      timeline = ["\006\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200", # retweet - dupe
+                  "\005\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200", # retweet - dupe
+                  "\004\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200", # retweet - dupe
+                  "\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"] # retweet - not a dupe
+      @client.store '0', timeline
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT, true).entries.should == timeline[2,3]
     end
 
     it 'returns nil on error' do
