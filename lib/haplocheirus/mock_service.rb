@@ -7,8 +7,14 @@ class Haplocheirus::MockService #:nodoc:
 
   class MockNode < Struct.new(:status_id, :secondary_id, :bitfield)
     RETWEET_BIT = 31
+
     def self.unpack(string)
       new *string.unpack("QQI")
+    end
+
+    def initialize(*args)
+      super
+      self.bitfield ||= 0
     end
 
     def is_share?
