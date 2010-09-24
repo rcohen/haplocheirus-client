@@ -45,6 +45,14 @@ describe Haplocheirus::Client do
       rval.size.should == 20
     end
 
+    it 'does not dedupe by default' do
+      timeline = ["\004\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200", # retweet - dupe
+                  "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000", # tweet
+                  "\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"] # retweet - not a dupe
+      @client.store '0', timeline
+      @client.get('0', 0, ARBITRARILY_LARGE_LIMIT).entries.should == timeline
+    end
+
     it 'dedupes with source present' do
       timeline = ["\004\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\200", # retweet - dupe
                   "\003\000\000\000\000\000\000\000\003\000\000\000\000\000\000\000\000\000\000\000", # tweet
