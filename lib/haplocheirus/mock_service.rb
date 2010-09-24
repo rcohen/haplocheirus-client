@@ -5,6 +5,17 @@ class Haplocheirus::MockService #:nodoc:
   class MockResult < Struct.new(:entries, :size)
   end
 
+  class MockNode < Struct.new(:status_id, :secondary_id, :bitfield)
+    RETWEET_BIT = 31
+    def self.unpack(string)
+      new *string.unpack("QQI")
+    end
+
+    def is_share?
+      bitfield[RETWEET_BIT] == 1
+    end
+  end
+
   def initialize
     @timelines = {}
   end
@@ -13,6 +24,7 @@ class Haplocheirus::MockService #:nodoc:
     is.each do |i|
       key = p + i.to_s
       next unless @timelines.key?(key)
+      # NOTE: This check occurs on read, server-side
       @timelines[key].unshift(e) unless @timelines[key].include?(e)
     end
   end
@@ -43,13 +55,27 @@ class Haplocheirus::MockService #:nodoc:
   end
 
   def store(i, e)
-    @timelines[i] ||= []
+    @timelines[i] = []
     e.reverse.each { |n| append n, '', [i] }
   end
 
-  def filter(i, *e)
+  def filter(i, e, depth = -1)
     raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
-    @timelines[i] & e.flatten
+
+    haystack = @timelines[i].map do |ea|
+      node = MockNode.unpack(ea)
+      if node.is_share?
+        node.secondary_id
+      else
+        node.status_id
+      end
+    end.uniq
+
+    # FIXME: Only send the first 8 bytes for the needles
+    e.select do |packed|
+      node = MockNode.unpack(packed)
+      haystack.include?(node.status_id)
+    end
   end
 
   def merge(i, e)
@@ -89,20 +115,24 @@ class Haplocheirus::MockService #:nodoc:
   def dedupe(t)
     # I can't wait until Array#uniq takes a block...
     seen = { }
+    seen_secondary = { }
     t.reverse.each do |i|
-      status_id, secondary_id, bitfield = i.unpack("QQI")
+      node = MockNode.unpack(i)
 
-      if bitfield[2] == 1
-        next if seen.key?(status_id) || seen.key?(secondary_id)
-        seen[status_id] = i
-        seen[secondary_id] = i if secondary_id != ""
+      if node.is_share?
+        next if seen.key?(node.status_id) ||
+          seen.key?(node.secondary_id) ||
+          seen_secondary.key?(node.secondary_id)
+
+        seen[node.status_id] = i
+        seen_secondary[node.secondary_id] = i
       else
-        next if seen.key?(status_id)
-        seen[status_id] = i
+        next if seen.key?(node.status_id)
+        seen[node.status_id] = i
       end
     end
 
-    seen.values.uniq.sort { |a, b| b[0,8] <=> a[0,8] }
+    seen.values.uniq.sort { |a, b| b[0,8].unpack("Q") <=> a[0,8].unpack("Q") }
   end
 
 end
