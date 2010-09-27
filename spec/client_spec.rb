@@ -135,14 +135,18 @@ describe Haplocheirus::Client do
 
   describe 'filter' do
     it 'works' do
-      @client.store '0', ["\003\000\000\000\000\000\000\000", "\002\000\000\000\000\000\000\000"]
-      @client.filter('0', "\003\000\000\000\000\000\000\000").should == ["\003\000\000\000\000\000\000\000"]
-      @client.filter('0', ["\003\000\000\000\000\000\000\000"]).should == ["\003\000\000\000\000\000\000\000"]
+      timeline =  ["\003\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\000",
+                   "\002\000\000\000\000\000\000\000\001\000\000\000\000\000\000\000\000\000\000\200"]
+      @client.store '0', timeline
+      @client.filter('0', 3).should == timeline[0,1]
+      @client.filter('0', [3]).should == timeline[0,1]
+      @client.filter('0', 1).should == timeline[1,1]
+      @client.filter('0', [1]).should == timeline[1,1]
     end
 
     it 'returns nil on error' do
       @client.delete '0'
-      @client.filter('0', "\003\000\000\000\000\000\000\000").should be_nil
+      @client.filter('0', 3).should be_nil
     end
   end
 
