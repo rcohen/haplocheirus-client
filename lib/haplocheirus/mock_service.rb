@@ -65,22 +65,13 @@ class Haplocheirus::MockService #:nodoc:
     e.reverse.each { |n| append n, '', [i] }
   end
 
-  def filter(i, e, depth = -1)
-    raise Haplocheirus::TimelineStoreException unless @timelines.key?(i)
+  def filter(key, ids, depth = -1)
+    raise Haplocheirus::TimelineStoreException unless @timelines.key?(key)
 
-    haystack = @timelines[i].map do |ea|
+    haystack = @timelines[key].select do |ea|
       node = MockNode.unpack(ea)
-      if node.is_share?
-        node.secondary_id
-      else
-        node.status_id
-      end
-    end.uniq
-
-    # FIXME: Only send the first 8 bytes for the needles
-    e.select do |packed|
-      node = MockNode.unpack(packed)
-      haystack.include?(node.status_id)
+      id = node.is_share? ? node.secondary_id : node.status_id
+      ids.include?(id)
     end
   end
 
