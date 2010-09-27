@@ -14,7 +14,10 @@ describe Haplocheirus::Client do
       @client.store PREFIX + '0', ['bar']
       @client.append 'foo', PREFIX, [0]
 
-      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval = try_times(lambda { |r| r.size == 2 }) do
+        @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
+      end
+
       rval.entries.should == ['foo', 'bar']
       rval.size.should == 2
     end
@@ -23,7 +26,10 @@ describe Haplocheirus::Client do
       @client.store PREFIX + '0', ['bar']
       @client.append 'foo', PREFIX, 0
 
-      rval = @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
+      rval = try_times(lambda { |r| r.size == 2 }) do
+        @client.get(PREFIX + '0', 0, ARBITRARILY_LARGE_LIMIT)
+      end
+
       rval.entries.should == ['foo', 'bar']
       rval.size.should == 2
     end
