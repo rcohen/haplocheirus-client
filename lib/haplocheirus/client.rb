@@ -91,17 +91,16 @@ class Haplocheirus::Client
     @service.store timeline_id, entries
   end
 
-  # Returns the intersection of entries with the current contents of
-  # the timeline given by timeline_id. Returns nil if the
-  # timeline_id does not exist.
+  # Returns timeline entries from the timeline given by timeline_id
+  # that match one of ids. Returns nil if the timeline_id does not exist.
   #
   # ==== Parameters
   # timeline_id<String>
-  # entries<Array>
+  # ids<Array[Integer], Integer>
   #
-  def filter(timeline_id, *entries)
+  def filter(timeline_id, *ids)
     # FIXME: Expose max search depth
-    @service.filter timeline_id, entries.flatten, -1
+    @service.filter timeline_id, ids.flatten, -1
   rescue Haplocheirus::TimelineStoreException
     nil
   end
