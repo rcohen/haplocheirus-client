@@ -16,6 +16,7 @@ def try_times(valid_proc, attempts = 5, &block)
     break if tries > attempts
     val = yield
     break if valid_proc.call(val)
+    tries += 1
     sleep 0.1
   end
   val
