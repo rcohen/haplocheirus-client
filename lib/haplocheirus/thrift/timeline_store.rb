@@ -42,13 +42,13 @@ module Haplocheirus
         return
       end
 
-      def filter(timeline_id, entry, max_search)
-        send_filter(timeline_id, entry, max_search)
+      def filter(timeline_id, id, max_search)
+        send_filter(timeline_id, id, max_search)
         return recv_filter()
       end
 
-      def send_filter(timeline_id, entry, max_search)
-        send_message('filter', Filter_args, :timeline_id => timeline_id, :entry => entry, :max_search => max_search)
+      def send_filter(timeline_id, id, max_search)
+        send_message('filter', Filter_args, :timeline_id => timeline_id, :id => id, :max_search => max_search)
       end
 
       def recv_filter()
@@ -137,7 +137,7 @@ module Haplocheirus
 
       def merge_indirect(dest_timeline_id, source_timeline_id)
         send_merge_indirect(dest_timeline_id, source_timeline_id)
-        recv_merge_indirect()
+        return recv_merge_indirect()
       end
 
       def send_merge_indirect(dest_timeline_id, source_timeline_id)
@@ -146,13 +146,14 @@ module Haplocheirus
 
       def recv_merge_indirect()
         result = receive_message(Merge_indirect_result)
+        return result.success unless result.success.nil?
         raise result.ex unless result.ex.nil?
-        return
+        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'merge_indirect failed: unknown result')
       end
 
       def unmerge_indirect(dest_timeline_id, source_timeline_id)
         send_unmerge_indirect(dest_timeline_id, source_timeline_id)
-        recv_unmerge_indirect()
+        return recv_unmerge_indirect()
       end
 
       def send_unmerge_indirect(dest_timeline_id, source_timeline_id)
@@ -161,8 +162,9 @@ module Haplocheirus
 
       def recv_unmerge_indirect()
         result = receive_message(Unmerge_indirect_result)
+        return result.success unless result.success.nil?
         raise result.ex unless result.ex.nil?
-        return
+        raise ::Thrift::ApplicationException.new(::Thrift::ApplicationException::MISSING_RESULT, 'unmerge_indirect failed: unknown result')
       end
 
       def delete_timeline(timeline_id)
@@ -211,7 +213,7 @@ module Haplocheirus
         args = read_args(iprot, Filter_args)
         result = Filter_result.new()
         begin
-          result.success = @handler.filter(args.timeline_id, args.entry, args.max_search)
+          result.success = @handler.filter(args.timeline_id, args.id, args.max_search)
         rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
@@ -277,7 +279,7 @@ module Haplocheirus
         args = read_args(iprot, Merge_indirect_args)
         result = Merge_indirect_result.new()
         begin
-          @handler.merge_indirect(args.dest_timeline_id, args.source_timeline_id)
+          result.success = @handler.merge_indirect(args.dest_timeline_id, args.source_timeline_id)
         rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
@@ -288,7 +290,7 @@ module Haplocheirus
         args = read_args(iprot, Unmerge_indirect_args)
         result = Unmerge_indirect_result.new()
         begin
-          @handler.unmerge_indirect(args.dest_timeline_id, args.source_timeline_id)
+          result.success = @handler.unmerge_indirect(args.dest_timeline_id, args.source_timeline_id)
         rescue Haplocheirus::TimelineStoreException => ex
           result.ex = ex
         end
@@ -385,13 +387,13 @@ module Haplocheirus
     class Filter_args
       include ::Thrift::Struct
       TIMELINE_ID = 1
-      ENTRY = 2
+      ID = 2
       MAX_SEARCH = 3
 
-      ::Thrift::Struct.field_accessor self, :timeline_id, :entry, :max_search
+      ::Thrift::Struct.field_accessor self, :timeline_id, :id, :max_search
       FIELDS = {
         TIMELINE_ID => {:type => ::Thrift::Types::STRING, :name => 'timeline_id'},
-        ENTRY => {:type => ::Thrift::Types::LIST, :name => 'entry', :element => {:type => ::Thrift::Types::STRING}},
+        ID => {:type => ::Thrift::Types::LIST, :name => 'id', :element => {:type => ::Thrift::Types::I64}},
         MAX_SEARCH => {:type => ::Thrift::Types::I32, :name => 'max_search'}
       }
 
@@ -622,10 +624,12 @@ module Haplocheirus
 
     class Merge_indirect_result
       include ::Thrift::Struct
+      SUCCESS = 0
       EX = 1
 
-      ::Thrift::Struct.field_accessor self, :ex
+      ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
+        SUCCESS => {:type => ::Thrift::Types::BOOL, :name => 'success'},
         EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
@@ -656,10 +660,12 @@ module Haplocheirus
 
     class Unmerge_indirect_result
       include ::Thrift::Struct
+      SUCCESS = 0
       EX = 1
 
-      ::Thrift::Struct.field_accessor self, :ex
+      ::Thrift::Struct.field_accessor self, :success, :ex
       FIELDS = {
+        SUCCESS => {:type => ::Thrift::Types::BOOL, :name => 'success'},
         EX => {:type => ::Thrift::Types::STRUCT, :name => 'ex', :class => Haplocheirus::TimelineStoreException}
       }
 
@@ -703,5 +709,4 @@ module Haplocheirus
     end
 
   end
-
 end
