@@ -21,6 +21,8 @@ module Haplocheirus
   def self.new(*args)
     service = Haplocheirus::Service.new(*args)
     Haplocheirus::Client.new(service)
+  rescue Haplocheirus::Service::ServiceDisabled
+    nil
   end
 
 end

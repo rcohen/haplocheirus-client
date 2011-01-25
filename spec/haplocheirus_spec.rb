@@ -8,6 +8,10 @@ describe Haplocheirus do
       h.should_not be_nil
       h.should be_an_instance_of Haplocheirus::Client
     end
+
+    it 'returns nil when :enabled is false' do
+      Haplocheirus.new('localhost:7666', :enabled => false).should be_nil
+    end
   end
 
 end
