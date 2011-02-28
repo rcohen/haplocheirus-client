@@ -185,23 +185,25 @@ describe Haplocheirus::Client do
 
   describe 'unmerge' do
     it 'works' do
-      @client.store '0', ['foo', 'bar', 'baz']
-      @client.unmerge('0', ['bar'])
+      @client.store '0', ["\003\000\000\000\000\000\000\000", "\002\000\000\000\000\000\000\000",
+                          "\001\000\000\000\000\000\000\000"]
+      @client.unmerge('0', ["\002\000\000\000\000\000\000\000"])
 
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ['foo', 'baz']
+      rval.entries.should == ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
       rval.size.should == 2
     end
   end
 
   describe 'unmerge_indirect' do
     it 'works' do
-      @client.store '0', ['foo', 'bar', 'baz']
-      @client.store '1', ['bar']
+      @client.store '0', ["\003\000\000\000\000\000\000\000", "\002\000\000\000\000\000\000\000",
+                          "\001\000\000\000\000\000\000\000"]
+      @client.store '1', ["\002\000\000\000\000\000\000\000"]
       @client.unmerge_indirect '0', '1'
 
       rval = @client.get('0', 0, ARBITRARILY_LARGE_LIMIT)
-      rval.entries.should == ['foo', 'baz']
+      rval.entries.should == ["\003\000\000\000\000\000\000\000", "\001\000\000\000\000\000\000\000"]
       rval.size.should == 2
     end
 
